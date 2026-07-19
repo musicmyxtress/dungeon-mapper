@@ -1,7 +1,24 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Input, Label, TextField } from 'react-aria-components'
+import {
+  Button,
+  Input,
+  Label,
+  ListBox,
+  ListBoxItem,
+  Popover,
+  Select,
+  SelectValue,
+  TextField,
+} from 'react-aria-components'
 import { getCharacter, updateCharacter } from '../data/characterStore'
+import {
+  fetchBaseClasses,
+  fetchBaseSpecies,
+  sourceLabel,
+  type Open5eDocument,
+} from '../data/open5eClient'
+import { useOpen5eCollection } from '../data/useOpen5eCollection'
 import type { Character } from '../types/character'
 
 export function CharacterBuilder() {
@@ -10,6 +27,9 @@ export function CharacterBuilder() {
   const [character, setCharacter] = useState<Character | undefined>(() =>
     id ? getCharacter(id) : undefined,
   )
+
+  const species = useOpen5eCollection(fetchBaseSpecies)
+  const classes = useOpen5eCollection(fetchBaseClasses)
 
   useEffect(() => {
     if (id && !character) {
@@ -20,10 +40,15 @@ export function CharacterBuilder() {
   if (!character) return null
 
   function handleNameChange(name: string) {
-    setCharacter((prev) => {
-      if (!prev) return prev
-      return updateCharacter(prev.id, { name }) ?? prev
-    })
+    setCharacter((prev) => (prev ? (updateCharacter(prev.id, { name }) ?? prev) : prev))
+  }
+
+  function handleRaceChange(key: string) {
+    setCharacter((prev) => (prev ? (updateCharacter(prev.id, { race: key }) ?? prev) : prev))
+  }
+
+  function handleClassChange(key: string) {
+    setCharacter((prev) => (prev ? (updateCharacter(prev.id, { className: key }) ?? prev) : prev))
   }
 
   return (
@@ -38,10 +63,86 @@ export function CharacterBuilder() {
         <Input />
       </TextField>
 
-      <p className="placeholder-note">
-        Race, class, spell, and skill pickers are coming next — this page proves the save/load
-        flow works.
-      </p>
+      <Open5ePicker
+        label="Race"
+        status={species.status}
+        error={species.error}
+        onRetry={species.retry}
+        items={species.items}
+        selectedKey={character.race}
+        onChange={handleRaceChange}
+      />
+
+      <Open5ePicker
+        label="Class"
+        status={classes.status}
+        error={classes.error}
+        onRetry={classes.retry}
+        items={classes.items}
+        selectedKey={character.className}
+        onChange={handleClassChange}
+      />
     </main>
+  )
+}
+
+interface Open5eOption {
+  key: string
+  name: string
+  document: Open5eDocument
+}
+
+function Open5ePicker<T extends Open5eOption>({
+  label,
+  status,
+  error,
+  onRetry,
+  items,
+  selectedKey,
+  onChange,
+}: {
+  label: string
+  status: 'loading' | 'error' | 'ready'
+  error: string | null
+  onRetry: () => void
+  items: T[]
+  selectedKey: string | undefined
+  onChange: (key: string) => void
+}) {
+  if (status === 'loading') {
+    return (
+      <p role="status" aria-live="polite">
+        Loading {label.toLowerCase()} options…
+      </p>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <div role="alert">
+        <p>Couldn't load {label.toLowerCase()} options{error ? `: ${error}` : '.'}</p>
+        <Button onPress={onRetry}>Retry</Button>
+      </div>
+    )
+  }
+
+  return (
+    <Select selectedKey={selectedKey ?? null} onSelectionChange={(key) => onChange(String(key))}>
+      <Label>{label}</Label>
+      <Button>
+        <SelectValue />
+        <span aria-hidden="true"> ▾</span>
+      </Button>
+      <Popover>
+        <ListBox items={items}>
+          {(item) => (
+            <ListBoxItem id={item.key} textValue={`${item.name} — ${sourceLabel(item.document)}`}>
+              {item.name}
+              <span className="source-tag"> — {sourceLabel(item.document)}</span>
+            </ListBoxItem>
+          )}
+        </ListBox>
+      </Popover>
+    </Select>
   )
 }

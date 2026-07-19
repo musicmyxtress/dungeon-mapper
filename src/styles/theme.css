@@ -107,3 +107,63 @@ button:hover {
   color: var(--color-text-muted);
   font-style: italic;
 }
+
+.react-aria-Select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 320px;
+  margin-bottom: 1.5rem;
+}
+
+.react-aria-Select > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: left;
+  border: 1px solid var(--color-border);
+}
+
+.react-aria-Popover {
+  width: var(--trigger-width);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  max-height: 300px;
+  overflow: auto;
+}
+
+.react-aria-ListBox {
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem;
+  outline: none;
+}
+
+.react-aria-ListBoxItem {
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.react-aria-ListBoxItem[data-focused],
+.react-aria-ListBoxItem[data-hovered] {
+  background: var(--color-accent);
+  color: #1a1408;
+}
+
+.react-aria-ListBoxItem[data-focused] .source-tag,
+.react-aria-ListBoxItem[data-hovered] .source-tag {
+  color: #1a1408;
+}
+
+.react-aria-ListBoxItem[data-selected] {
+  font-weight: 700;
+}
+
+.source-tag {
+  color: var(--color-text-muted);
+  font-size: 0.85em;
+}
